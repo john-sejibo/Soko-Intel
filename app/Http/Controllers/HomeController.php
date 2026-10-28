@@ -11,8 +11,13 @@ class HomeController extends Controller
     {
         $products = Product::with('category')
             ->withMin(['priceRecords as min_price' => fn ($q) => $q->where('recorded_at', '>=', now()->subDays(30))], 'price')
-            ->when($request->q, fn ($q, $s) => $q->where(fn ($w) => $w
-                ->where('name', 'like', "%{$s}%")->orWhere('brand', 'like', "%{$s}%")->orWhere('model', 'like', "%{$s}%")))
+            ->when($request->q, function ($q, $s) {
+                $like = '%'.mb_strtolower($s).'%';
+                $q->where(fn ($w) => $w
+                    ->whereRaw('LOWER(name) LIKE ?', [$like])
+                    ->orWhereRaw('LOWER(brand) LIKE ?', [$like])
+                    ->orWhereRaw('LOWER(model) LIKE ?', [$like]));
+            })
             ->when($request->category, fn ($q, $c) => $q->where('category_id', $c))
             ->orderBy('name')->paginate(12)->withQueryString();
 
