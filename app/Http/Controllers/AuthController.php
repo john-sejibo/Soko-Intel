@@ -12,11 +12,15 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $cred = $request->validate(['email' => 'required|email', 'password' => 'required']);
-        if (Auth::attempt($cred, $request->boolean('remember'))) {
+
+        if (Auth::attempt($cred + ['is_active' => true], $request->boolean('remember'))) {
             $request->session()->regenerate();
             return redirect()->intended('/');
         }
-        return back()->withErrors(['email' => 'Email au password si sahihi.'])->onlyInput('email');
+
+        // Ujumbe tofauti kwa akaunti iliyozuiwa
+        $blocked = User::where('email', $cred['email'])->where('is_active', false)->exists();
+        return back()->withErrors(['email' => $blocked ? __('soko.errors.account_disabled') : __('soko.errors.login_failed')])->onlyInput('email');
     }
 
     public function showRegister() { return view('auth.register'); }
@@ -25,7 +29,7 @@ class AuthController extends Controller
     {
         $data = $request->validate([
             'name' => 'required|string|max:100',
-            'email' => 'required|email|unique:users',
+            'email' => 'required|email|max:150|unique:users',
             'password' => 'required|min:8|confirmed',
             'role' => 'required|in:buyer,seller', // admin hawezi kujisajili
         ]);

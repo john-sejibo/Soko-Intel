@@ -22,7 +22,7 @@ class DashboardController extends Controller
             ->selectRaw('product_id, DATE(recorded_at) as d, AVG(price) as a')
             ->groupBy('product_id', 'd')->orderBy('d')->get()->groupBy('product_id');
 
-        $movers = Product::all()->map(function ($p) use ($cur, $prev, $daily) {
+        $movers = Product::where('status', 'approved')->get()->map(function ($p) use ($cur, $prev, $daily) {
             $c = $cur[$p->id] ?? null;
             $pv = $prev[$p->id] ?? null;
             return (object) [
@@ -49,8 +49,8 @@ class DashboardController extends Controller
             'levels' => $levels,
             'recent' => PriceRecord::with(['product', 'market', 'seller'])->latest('recorded_at')->limit(8)->get(),
             'stats'  => [
-                'products' => Product::count(),
-                'markets'  => Market::count(),
+                'products' => Product::where('status', 'approved')->count(),
+                'markets'  => Market::approved()->count(),
                 'sellers'  => Seller::where('is_verified', true)->count(),
                 'today'    => PriceRecord::where('recorded_at', '>=', $now->copy()->subDay())->count(),
             ],

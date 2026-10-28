@@ -10,7 +10,7 @@ class EnsureRole
     {
         $user = $request->user();
         if (! $user || ! in_array($user->role, $roles, true)) {
-            abort(403, 'Huna ruhusa ya kuingia hapa.');
+            abort(403, __('soko.errors.no_permission'));
         }
         return $next($request);
     }

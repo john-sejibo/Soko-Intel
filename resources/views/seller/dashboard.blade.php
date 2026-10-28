@@ -1,42 +1,70 @@
 @extends('layouts.app')
+@section('title', __('soko.seller.title'))
 @section('content')
-<h3>Dashboard ya muuzaji</h3>
-<div class="row g-4">
-  <div class="col-md-5">
-    <div class="card card-body shadow-sm mb-3">
-      <h5>Profile ya biashara</h5>
-      <form method="POST" action="{{ route('seller.profile') }}">@csrf
-        <label class="form-label">Jina la biashara</label><input class="form-control mb-2" name="business_name" value="{{ old('business_name', $seller?->business_name) }}" required>
-        <label class="form-label">Soko</label>
-        <select class="form-select mb-2" name="market_id" required>
-          @foreach($markets as $m)<option value="{{ $m->id }}" @selected($seller?->market_id == $m->id)>{{ $m->name }}</option>@endforeach
-        </select>
-        <label class="form-label">Simu</label><input class="form-control mb-3" name="phone" value="{{ old('phone', $seller?->phone) }}">
-        <button class="btn btn-dark">Hifadhi</button>
-      </form>
+<h1 class="h2 mb-4">{{ __('soko.seller.title') }}</h1>
+<div class="row g-5">
+  <section class="col-lg-7" aria-labelledby="shops-h">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <h2 id="shops-h" class="section-title mb-0">{{ __('soko.seller.my_shops') }}</h2>
+      <a class="btn btn-dark btn-sm" href="{{ route('seller.shops.create') }}">{{ __('soko.seller.add_shop') }}</a>
     </div>
-    @if($seller)
-    <div class="card card-body shadow-sm">
-      <h5>Weka / sasisha bei</h5>
+    @forelse($shops as $s)
+      <div class="shop-row">
+        <div>
+          <div class="fw-semibold">{{ $s->business_name }}
+            @if($s->status !== 'active')<span class="badge text-bg-secondary">{{ __('soko.seller.suspended') }}</span>@endif
+            <span class="badge text-bg-{{ $s->is_verified ? 'success' : 'warning' }}">{{ $s->is_verified ? __('soko.seller.verified') : __('soko.seller.unverified') }}</span>
+          </div>
+          <div class="board-meta">{{ $s->market->name }}@if($s->address), {{ $s->address }}@endif @if($s->phone) &middot; {{ $s->phone }}@endif</div>
+        </div>
+        <div class="d-flex gap-2 align-items-center">
+          @if($s->gmapsUrl())<a class="small" href="{{ $s->gmapsUrl() }}" target="_blank" rel="noopener">{{ __('soko.admin.map_open') }}</a>@endif
+          <a class="btn btn-outline-dark btn-sm" href="{{ route('seller.shops.edit', $s) }}">{{ __('soko.seller.edit') }}</a>
+        </div>
+      </div>
+    @empty
+      <p>{{ __('soko.seller.no_shops') }}</p>
+    @endforelse
+
+    <h2 class="section-title mt-5">{{ __('soko.seller.recent_title') }}</h2>
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead><tr><th>{{ __('soko.seller.th_product') }}</th><th>{{ __('soko.seller.th_shop') }}</th><th class="text-end">{{ __('soko.seller.th_price') }}</th><th class="text-end">{{ __('soko.seller.th_stock') }}</th><th>{{ __('soko.seller.th_time') }}</th></tr></thead>
+        <tbody>
+        @forelse($records as $r)
+          <tr><td>{{ $r->product->name }}</td><td>{{ $r->seller?->business_name }}</td><td class="num text-end">{{ number_format($r->price) }}</td><td class="num text-end">{{ $r->stock_qty ?? '-' }}</td><td><small>{{ $r->recorded_at->format('d M H:i') }}</small></td></tr>
+        @empty
+          <tr><td colspan="5" class="text-center">{{ __('soko.seller.no_recent') }}</td></tr>
+        @endforelse
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="col-lg-5" aria-labelledby="price-h">
+    <div class="rule-top">
+      <h2 id="price-h" class="section-title">{{ __('soko.seller.price_title') }}</h2>
+      @if($shops->where('status', 'active')->count())
       <form method="POST" action="{{ route('seller.price') }}">@csrf
-        <select class="form-select mb-2" name="product_id" required>
-          @foreach($products as $p)<option value="{{ $p->id }}">{{ $p->name }}</option>@endforeach
+        <label class="form-label" for="shop_id">{{ __('soko.seller.shop') }}</label>
+        <select class="form-select mb-2" id="shop_id" name="shop_id" required>
+          @foreach($shops->where('status', 'active') as $s)<option value="{{ $s->id }}" @selected(old('shop_id') == $s->id)>{{ $s->business_name }} ({{ $s->market->name }})</option>@endforeach
         </select>
-        <input class="form-control mb-2" type="number" name="price" placeholder="Bei (TSh)" required>
-        <input class="form-control mb-3" type="number" name="stock_qty" placeholder="Stock (hiari)">
-        <button class="btn btn-success">Hifadhi bei</button>
+        <label class="form-label" for="product_id">{{ __('soko.seller.product') }}</label>
+        <select class="form-select mb-1" id="product_id" name="product_id" required>
+          @foreach($products as $p)<option value="{{ $p->id }}" @selected(old('product_id') == $p->id)>{{ $p->name }}@if($p->status === 'pending') {{ __('soko.seller.pending_tag') }}@endif</option>@endforeach
+        </select>
+        <p class="small mb-2"><a href="{{ route('seller.products.create') }}">{{ __('soko.seller.propose_product') }}</a></p>
+        <label class="form-label" for="price">{{ __('soko.seller.price_tsh') }}</label>
+        <input class="form-control mb-2" id="price" type="number" name="price" value="{{ old('price') }}" required>
+        <label class="form-label" for="stock_qty">{{ __('soko.seller.stock_opt') }}</label>
+        <input class="form-control mb-3" id="stock_qty" type="number" name="stock_qty" value="{{ old('stock_qty') }}">
+        <button class="btn btn-success">{{ __('soko.seller.save_price') }}</button>
       </form>
+      @else
+        <p>{{ __('soko.seller.need_shop') }}</p>
+      @endif
     </div>
-    @endif
-  </div>
-  <div class="col-md-7">
-    <div class="card shadow-sm"><div class="card-header">Bei ulizoweka hivi karibuni</div>
-      <table class="table mb-0"><thead><tr><th>Bidhaa</th><th class="text-end">Bei</th><th>Stock</th><th>Lini</th></tr></thead><tbody>
-      @forelse($records as $r)
-        <tr><td>{{ $r->product->name }}</td><td class="text-end">{{ number_format($r->price) }}</td><td>{{ $r->stock_qty ?? '-' }}</td><td><small>{{ $r->recorded_at->format('d M H:i') }}</small></td></tr>
-      @empty<tr><td colspan="4" class="text-center">Bado hujaweka bei.</td></tr>@endforelse
-      </tbody></table>
-    </div>
-  </div>
+  </section>
 </div>
 @endsection

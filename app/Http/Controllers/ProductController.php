@@ -8,9 +8,12 @@ class ProductController extends Controller
 {
     public function show(Product $product)
     {
-        // Bei ya hivi karibuni kwa kila soko
+        abort_unless($product->status === 'approved' || auth()->user()?->isAdmin(), 404);
+
+        // Bei ya hivi karibuni kwa kila soko (masoko yaliyokubaliwa tu)
         $latest = PriceRecord::with(['market', 'seller'])
             ->where('product_id', $product->id)
+            ->whereHas('market', fn ($q) => $q->where('status', 'approved'))
             ->orderByDesc('recorded_at')->get()
             ->unique('market_id')->sortBy('price')->values();
 
@@ -26,6 +29,13 @@ class ProductController extends Controller
             ->whereBetween('recorded_at', [now()->subDays(14), now()->subDays(7)])->avg('price');
         $change = ($current && $previous) ? round((($current - $previous) / $previous) * 100, 1) : null;
 
-        return view('products.show', compact('product', 'latest', 'history', 'change'));
+        // Pointi za ramani
+        $points = $latest->filter(fn ($r) => $r->market->latitude !== null && $r->market->longitude !== null)
+            ->map(fn ($r) => [
+                'name' => $r->market->name, 'lat' => $r->market->latitude, 'lng' => $r->market->longitude,
+                'price' => $r->price, 'url' => $r->market->gmapsUrl(),
+            ])->values();
+
+        return view('products.show', compact('product', 'latest', 'history', 'change', 'points'));
     }
 }

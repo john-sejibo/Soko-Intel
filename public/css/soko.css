@@ -111,3 +111,17 @@ h1, h2, h3, h4, h5, .brand { font-family: 'Bricolage Grotesque', 'Figtree', sans
 .row-cheapest td { background: color-mix(in srgb, var(--soko-sand) 22%, transparent); }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+/* v0.3: ramani, admin, biashara */
+.map-box { height: 380px; border: 1px solid var(--soko-line); border-radius: 8px; z-index: 0; }
+#picker-map { height: 320px; }
+.legend-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; vertical-align: middle; }
+.admin-tabs { border-bottom: 1px solid var(--soko-line); gap: .25rem; flex-wrap: wrap; }
+.admin-tabs .nav-link { color: var(--soko-ink); font-weight: 500; padding: .5rem .85rem; border-radius: 0; }
+.admin-tabs .nav-link.active { color: var(--soko-teal); box-shadow: inset 0 -3px 0 var(--soko-sand); }
+.stat { border-left: 4px solid var(--soko-sand); padding: .25rem 0 .25rem .75rem; }
+.stat-n { font-family: 'Bricolage Grotesque', 'Figtree', sans-serif; font-weight: 800; font-size: 1.6rem; line-height: 1.1; }
+.shop-row { display: flex; justify-content: space-between; gap: 1rem; align-items: center; padding: .9rem 0; border-top: 1px solid var(--soko-line); }
+.btn-group .btn.active { background: var(--soko-teal); border-color: var(--soko-teal); color: #fff; }
+[data-bs-theme="dark"] .btn-group .btn.active { color: #06201f; }
+.leaflet-container { font-family: var(--bs-body-font-family); }

@@ -52,7 +52,8 @@ class DatabaseSeeder extends Seeder
             $demoPassword = Str::random(16); // wauzaji wa mfano hawawezi kuingia kiholela
             $sellers = $markets->map(function ($m, $k) use ($demoPassword) {
                 $u = User::create(['name' => "Seller {$m->name}", 'email' => 'seller'.($k + 1).'@example.com', 'password' => $demoPassword, 'role' => 'seller']);
-                return Seller::create(['user_id' => $u->id, 'market_id' => $m->id, 'business_name' => "{$m->name} Traders", 'is_verified' => true]);
+                return Seller::create(['user_id' => $u->id, 'market_id' => $m->id, 'business_name' => "{$m->name} Traders", 'is_verified' => true,
+                    'latitude' => $m->latitude + 0.001 * $k, 'longitude' => $m->longitude + 0.001 * $k, 'address' => $m->name]);
             });
 
             foreach ($products as $pi => $product) {

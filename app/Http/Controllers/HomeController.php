@@ -9,7 +9,7 @@ class HomeController extends Controller
 {
     public function index(Request $request)
     {
-        $products = Product::with('category')
+        $products = Product::with('category')->where('status', 'approved')
             ->withMin(['priceRecords as min_price' => fn ($q) => $q->where('recorded_at', '>=', now()->subDays(30))], 'price')
             ->when($request->q, function ($q, $s) {
                 $like = '%'.mb_strtolower($s).'%';
